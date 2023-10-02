@@ -4,8 +4,21 @@ import { Product } from "./product.model";
 export class ProductService {
     private products:Product[] = [];
 
-    // no need to add type string to function because typescript has feature "Type Inference" which define auto type
-    insertProduct(title: string, desc: string, price: number) {
+    // ---------------------------- shared methods
+    private findProduct(id: string) : [Product, number] 
+    {
+        const index = this.products.findIndex( p => p.id === id );
+        const singleProduct = this.products[index]
+        if (!singleProduct) {
+            throw new NotFoundException('Could not find product.');
+        }
+
+        return [singleProduct, index];
+    }
+
+    //-------------------  CRUD OPERATION     ------------------------// 
+    
+    insertProduct(title: string, desc: string, price: number) {   // no need to add type string to function because typescript has feature "Type Inference" which define auto type
         const id = Math.random().toString();
         const newProd = new Product(id, title, desc, price);
 
@@ -18,11 +31,25 @@ export class ProductService {
     }
 
     getSingleProduct(id: string) {
-        const singleProduct = this.products.find( p => p.id === id );
-        if (!singleProduct) {
-            throw new NotFoundException('Could not find product.');
-        }
+        const singleProduct = this.findProduct(id)[0]
         return { ...singleProduct }
+    }
+
+    updateProduct(id: string, title: string, desc: string, price: number) {
+        const [singleProduct, index] = this.findProduct(id);
+        const updatedProduct = {...singleProduct};
+
+        if (title) {
+            updatedProduct.title = title;
+        }
+        if (desc) {
+            updatedProduct.description = desc;
+        }
+        if (price) {
+            updatedProduct.price = price;
+        }
+        this.products[index] = updatedProduct;
+        return true;
     }
     
 }
