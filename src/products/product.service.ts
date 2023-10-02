@@ -4,10 +4,13 @@ import { Product } from "./product.model";
 export class ProductService {
     products:Product[] = [];
 
+    // no need to add type string to function because typescript has feature "Type Inference" which define auto type
     insertProduct(title: string, desc: string, price: number) {
-        const newProd = new Product(new Date().toString(), title, desc, price);
+        const id = new Date().toString();
+        const newProd = new Product(id, title, desc, price);
 
         this.products.push(newProd);
+        return id;
     }
     
 }
