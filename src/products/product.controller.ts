@@ -5,8 +5,8 @@ export class ProductController {
     constructor(private readonly productService: ProductService) {}
      
     @Get()
-    getProducts(): string {
-        return "hello product page!";
+    getProducts() {
+        return this.productService.getProducts();
     }
 
     @Post()
@@ -17,5 +17,5 @@ export class ProductController {
     ) {
        const id = this.productService.insertProduct(title, description, price);
        return { id }
-    } 
+    }
 }
