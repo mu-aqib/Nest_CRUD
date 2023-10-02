@@ -51,5 +51,10 @@ export class ProductService {
         this.products[index] = updatedProduct;
         return true;
     }
+
+    deleteProduct(id: string) {
+        const index = this.findProduct(id)[1];
+        this.products.splice(index, 1);
+    }
     
 }
