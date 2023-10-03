@@ -5,18 +5,19 @@ export class ProductController {
     constructor(private readonly productService: ProductService) {}
 
     @Post()
-    addProduct(
+    async addProduct(
         @Body('title') title: string,
         @Body('description') description: string,
         @Body('price') price: number,
     ) {
-       const id = this.productService.insertProduct(title, description, price);
+       const id = await this.productService.insertProduct(title, description, price);
        return { id }
     }
 
     @Get()
     getProducts() {
-        return this.productService.getProducts();
+        const products = this.productService.getProducts();
+        return products; 
     }
 
     // get single product
@@ -39,7 +40,6 @@ export class ProductController {
     // delete product
     @Delete(':id')
     deleteProduct(@Param('id') p_id: string) {
-        this.productService.deleteProduct(p_id);
-        return true;
+        return this.productService.deleteProduct(p_id);
     }
 }

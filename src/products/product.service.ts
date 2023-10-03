@@ -1,46 +1,76 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
 import { Product } from "./product.model";
+import { Model } from "mongoose";
 @Injectable()
 export class ProductService {
     private products:Product[] = [];
 
+    constructor(
+        @InjectModel('Product') private productModel: Model<Product>
+    ) {}
+
     // ---------------------------- shared methods
-    private findProduct(id: string) : [Product, number] 
+    private async findProduct(id: string) : Promise <Product> 
     {
-        const index = this.products.findIndex( p => p.id === id );
-        const singleProduct = this.products[index]
-        if (!singleProduct) {
+        // const index = this.products.findIndex( p => p.id === id );
+        // const singleProduct = this.products[index]
+        // if (!singleProduct) {
+        //     throw new NotFoundException('Could not find product.');
+        // }
+
+        // return [singleProduct, index];
+        let product;
+        try {
+            product = await this.productModel.findById(id).exec();
+        } catch (error) {
             throw new NotFoundException('Could not find product.');
         }
-
-        return [singleProduct, index];
+        if (!product) {
+            throw new NotFoundException('Could not find product.');
+        }
+        return product;
     }
 
     //-------------------  CRUD OPERATION     ------------------------// 
     
-    insertProduct(title: string, desc: string, price: number) {   // no need to add type string to function because typescript has feature "Type Inference" which define auto type
+    async insertProduct(title: string, desc: string, price: number) {   // no need to add type string to function because typescript has feature "Type Inference" which define auto type
         const id = Math.random().toString();
-        const newProd = new Product(id, title, desc, price);
-
-        this.products.push(newProd);
-        return id;
+        // const newProd = new Product(id, title, desc, price);
+        const newProduct = new this.productModel({
+            title,
+            description: desc,
+            price
+        });
+        const result = await newProduct.save();
+        return result.id;
     }
 
-    getProducts() {
-        return [...this.products] //destructure because I don't want to reference the products private variable.
+    async getProducts() {
+        const products = await this.productModel.find().exec();
+
+        return products.map(prod => ({
+            id: prod.id,
+            title: prod.title,
+            description: prod.description,
+            price: prod.price,
+        })); 
     }
 
-    getSingleProduct(id: string) {
-        const singleProduct = this.findProduct(id)[0]
-        return { ...singleProduct }
+    async getSingleProduct(id: string) {
+        const product = await this.findProduct(id);
+        return {
+            id: product.id,
+            title: product.title,
+            description: product.description,
+            price: product.price,
+        };
     }
 
-    updateProduct(id: string, title: string, desc: string, price: number) {
-        const [singleProduct, index] = this.findProduct(id);
-        const updatedProduct = {...singleProduct};
-
+    async updateProduct(id: string, title: string, desc: string, price: number) {
+        const updatedProduct = await this.findProduct(id);
         if (title) {
-            updatedProduct.title = title;
+             updatedProduct.title = title;
         }
         if (desc) {
             updatedProduct.description = desc;
@@ -48,13 +78,18 @@ export class ProductService {
         if (price) {
             updatedProduct.price = price;
         }
-        this.products[index] = updatedProduct;
+        await updatedProduct.save();
         return true;
     }
 
-    deleteProduct(id: string) {
-        const index = this.findProduct(id)[1];
-        this.products.splice(index, 1);
+    async deleteProduct(id: string) {
+        // const index = await ;
+        // this.products.splice(index, 1);
+        const result = await this.productModel.deleteOne({_id: id}).exec();
+        if (result.deletedCount === 0) {
+            throw new NotFoundException('Could not find product.');
+        }
+        return true;
     }
     
 }
